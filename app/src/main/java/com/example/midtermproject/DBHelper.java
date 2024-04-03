@@ -14,21 +14,27 @@ import java.util.List;
 public class DBHelper extends SQLiteOpenHelper {
 
     private static final String TABLE_USERDETAILS = "Userdetails";
+    private static final String TABLE_ORDERS = "orders";
+    private static final String TABLE_FEEDBACK = "feedback";
 //    private static final String TABLE_COURSES = "Courses";
 
     public DBHelper(Context context) {
-        super(context, "Userdata.db", null, 1);
+        super(context, "Userdata.db", null, 2);
     }
 
     @Override
     public void onCreate(SQLiteDatabase DB) {
         DB.execSQL("CREATE TABLE " + TABLE_USERDETAILS + "(username INTEGER PRIMARY KEY, password TEXT)");
+        DB.execSQL("CREATE TABLE " + TABLE_ORDERS + "(orderId INTEGER PRIMARY KEY AUTOINCREMENT, username INTEGER, orderDetails TEXT, totalAmount TEXT, FOREIGN KEY(username) REFERENCES Userdetails(username))");
+        DB.execSQL("CREATE TABLE " + TABLE_FEEDBACK + " (id INTEGER PRIMARY KEY AUTOINCREMENT, feedbackText TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)");
 //        DB.execSQL("CREATE TABLE " + TABLE_COURSES + "(courseId INTEGER PRIMARY KEY AUTOINCREMENT, studentId INTEGER, courseName TEXT, UNIQUE(studentId, courseName))");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase DB, int oldVersion, int newVersion) {
         DB.execSQL("DROP TABLE IF EXISTS Userdetails");
+        DB.execSQL("DROP TABLE IF EXISTS " + TABLE_ORDERS);
+        DB.execSQL("DROP TABLE IF EXISTS " + TABLE_FEEDBACK);
 //        DB.execSQL("DROP TABLE IF EXISTS " + TABLE_COURSES);
         onCreate(DB);
     }
@@ -42,6 +48,36 @@ public class DBHelper extends SQLiteOpenHelper {
         DB.close();
         return result != -1;
     }
+
+    public boolean insertOrderDetails(String orderDetails, String totalAmount) {
+        SQLiteDatabase DB = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("orderDetails", orderDetails);
+        contentValues.put("totalAmount", totalAmount);
+
+        long result = DB.insert("orders", null, contentValues);
+        DB.close();
+
+        return result != -1;
+    }
+
+    public boolean insertFeedback(String feedbackText) {
+        SQLiteDatabase DB = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("feedbackText", feedbackText);
+
+        try {
+            long result = DB.insertOrThrow(TABLE_FEEDBACK, null, contentValues);
+            return result != -1;
+        } catch (Exception e) {
+            Log.e("DBHelper", "Error inserting feedback: " + e.getMessage());
+            return false;
+        } finally {
+            DB.close();
+        }
+    }
+
+
 
 //    public boolean insertCourse(int studentId, String courseName) {
 //        if (courseName == null || courseName.trim().isEmpty()) {
@@ -79,6 +115,34 @@ public class DBHelper extends SQLiteOpenHelper {
         cursor.close();
         DB.close();
         return exists;
+    }
+    public List<Order> getAllOrders() {
+        List<Order> orderList = new ArrayList<>();
+        // Select All Query
+        String selectQuery = "SELECT * FROM " + TABLE_ORDERS;
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        // Looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                Order order = new Order(
+                        cursor.getInt(cursor.getColumnIndex("orderId")),
+                        cursor.getInt(cursor.getColumnIndex("username")),
+                        cursor.getString(cursor.getColumnIndex("orderDetails")),
+                        cursor.getString(cursor.getColumnIndex("totalAmount"))
+                );
+                orderList.add(order);
+            } while (cursor.moveToNext());
+        }
+
+        // Close cursor and database to free up resources
+        cursor.close();
+        db.close();
+
+        // Return the list of orders
+        return orderList;
     }
 
 }

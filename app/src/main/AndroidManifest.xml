@@ -13,13 +13,22 @@
         android:theme="@style/Theme.MidTermProject"
         tools:targetApi="34">
         <activity
+            android:name=".Cafeside"
+            android:exported="false" />
+        <activity
+            android:name=".Feedback"
+            android:exported="false" />
+        <activity
+            android:name=".Sironi2"
+            android:exported="false" />
+        <activity
+            android:name=".Sironi"
+            android:exported="false" />
+        <activity
             android:name=".OrderPage"
             android:exported="false" />
         <activity
             android:name=".CafeLatta"
-            android:exported="false" />
-        <activity
-            android:name=".Sironi"
             android:exported="false" />
         <activity
             android:name=".PCafe"

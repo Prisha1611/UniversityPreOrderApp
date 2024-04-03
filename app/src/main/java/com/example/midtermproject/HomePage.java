@@ -35,7 +35,7 @@ public class HomePage extends AppCompatActivity {
         imageView3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), Sironi.class);
+                Intent intent = new Intent(getApplicationContext(), Sironi2.class);
                 startActivity(intent);
             }
         });

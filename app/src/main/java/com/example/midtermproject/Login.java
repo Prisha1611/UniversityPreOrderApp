@@ -10,13 +10,15 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 public class Login extends AppCompatActivity {
-    Button loginButton,registerButton, CafeButton;
+    Button loginButton, registerButton, CafeButton;
     EditText studentID, studentPassword;
     DBHelper db;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
         loginButton = findViewById(R.id.loginButton);
         registerButton = findViewById(R.id.registerButton);
         CafeButton = findViewById(R.id.CafeButton);
@@ -45,13 +47,11 @@ public class Login extends AppCompatActivity {
                 String usernameStr = studentID.getText().toString();
                 int username = Integer.parseInt(usernameStr);
                 String password = studentPassword.getText().toString().trim();
-                db = new DBHelper(Login.this);
                 boolean isValidUser = db.checkUserCredentials(username, password);
                 if (isValidUser) {
                     Toast.makeText(Login.this, "Login successful", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(getApplicationContext(), HomePage.class);
                     startActivity(intent);
-                    // Optionally, navigate to main app screen
                 } else {
                     Toast.makeText(Login.this, "Invalid username or password", Toast.LENGTH_SHORT).show();
                 }

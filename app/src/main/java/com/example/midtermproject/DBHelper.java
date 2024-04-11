@@ -8,6 +8,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,12 +21,12 @@ public class DBHelper extends SQLiteOpenHelper {
 //    private static final String TABLE_COURSES = "Courses";
 
     public DBHelper(Context context) {
-        super(context, "Userdata.db", null, 2);
+        super(context, "Userdata.db", null, 4);
     }
 
     @Override
     public void onCreate(SQLiteDatabase DB) {
-        DB.execSQL("CREATE TABLE " + TABLE_USERDETAILS + "(username INTEGER PRIMARY KEY, password TEXT)");
+        DB.execSQL("CREATE TABLE Userdetails (username INTEGER PRIMARY KEY, password_hash TEXT, studentName TEXT)");
         DB.execSQL("CREATE TABLE " + TABLE_ORDERS + "(orderId INTEGER PRIMARY KEY AUTOINCREMENT, username INTEGER, orderDetails TEXT, totalAmount TEXT, FOREIGN KEY(username) REFERENCES Userdetails(username))");
         DB.execSQL("CREATE TABLE " + TABLE_FEEDBACK + " (id INTEGER PRIMARY KEY AUTOINCREMENT, feedbackText TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)");
 //        DB.execSQL("CREATE TABLE " + TABLE_COURSES + "(courseId INTEGER PRIMARY KEY AUTOINCREMENT, studentId INTEGER, courseName TEXT, UNIQUE(studentId, courseName))");
@@ -39,15 +41,19 @@ public class DBHelper extends SQLiteOpenHelper {
         onCreate(DB);
     }
 
-    public boolean insertUserData(int username, String password) {
+    public boolean insertUserData(int username, String hashedPassword,String studentName) {
         SQLiteDatabase DB = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put("username", username);
-        contentValues.put("password", password);
+        contentValues.put("password_hash", hashedPassword);
+        contentValues.put("studentName", studentName);
         long result = DB.insert("Userdetails", null, contentValues);
         DB.close();
         return result != -1;
     }
+
+
+
 
     public boolean insertOrderDetails(String orderDetails, String totalAmount) {
         SQLiteDatabase DB = this.getWritableDatabase();
@@ -107,15 +113,39 @@ public class DBHelper extends SQLiteOpenHelper {
 //        SQLiteDatabase DB = this.getReadableDatabase();
 //        return DB.rawQuery("SELECT * FROM " + TABLE_COURSES, null);
 //    }
+//    public boolean checkUserCredentials(int username, String password) {
+//        SQLiteDatabase DB = this.getReadableDatabase();
+//        Cursor cursor = DB.rawQuery("SELECT * FROM Userdetails WHERE username = ? AND password = ?",
+//                new String[]{String.valueOf(username), password});
+//        boolean exists = cursor.getCount() > 0;
+//        cursor.close();
+//        DB.close();
+//        return exists;
+//    }
+
     public boolean checkUserCredentials(int username, String password) {
         SQLiteDatabase DB = this.getReadableDatabase();
-        Cursor cursor = DB.rawQuery("SELECT * FROM Userdetails WHERE username = ? AND password = ?",
-                new String[]{String.valueOf(username), password});
-        boolean exists = cursor.getCount() > 0;
-        cursor.close();
-        DB.close();
-        return exists;
+        Cursor cursor = DB.rawQuery("SELECT password_hash FROM Userdetails WHERE username = ?", new String[]{String.valueOf(username)});
+        if (cursor != null && cursor.moveToFirst()) {
+            String storedHash = cursor.getString(0);
+            cursor.close();
+            DB.close();
+            // Compare the hash of the input password with the stored hash
+            return verifyPassword(password, storedHash);
+        }
+        return false;
     }
+
+    private boolean verifyPassword(String plainTextPassword, String hashedPassword) {
+        try {
+            // Assuming bcrypt is used for hashing
+            return BCrypt.checkpw(plainTextPassword, hashedPassword);
+        } catch (Exception e) {
+            Log.e("DBHelper", "Error verifying password: " + e.getMessage());
+            return false;
+        }
+    }
+
     public List<Order> getAllOrders() {
         List<Order> orderList = new ArrayList<>();
         // Select All Query

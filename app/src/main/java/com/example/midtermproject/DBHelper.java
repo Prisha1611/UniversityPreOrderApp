@@ -53,10 +53,10 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
 
-    public boolean insertOrderDetails(int username, String orderDetails, String totalAmount) {
+    public boolean insertOrderDetails(String orderDetails, String totalAmount) {
         SQLiteDatabase DB = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
-        contentValues.put("username", username);  // Include username in the ContentValues
+//        contentValues.put("username", username);  // Include username in the ContentValues
         contentValues.put("orderDetails", orderDetails);
         contentValues.put("totalAmount", totalAmount);
 

@@ -41,7 +41,7 @@ public class DBHelper extends SQLiteOpenHelper {
         onCreate(DB);
     }
 
-    public boolean insertUserData(int username, String hashedPassword,String studentName) {
+    public boolean insertUserData(int username, String hashedPassword, String studentName) {
         SQLiteDatabase DB = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put("username", username);
@@ -53,19 +53,19 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
 
-
-
-    public boolean insertOrderDetails(String orderDetails, String totalAmount) {
+    public boolean insertOrderDetails(int username, String orderDetails, String totalAmount) {
         SQLiteDatabase DB = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
+        contentValues.put("username", username);  // Include username in the ContentValues
         contentValues.put("orderDetails", orderDetails);
         contentValues.put("totalAmount", totalAmount);
 
         long result = DB.insert("orders", null, contentValues);
         DB.close();
 
-        return result != -1;
+        return result != -1;  // Return true if insertion is successful
     }
+
 
     public boolean insertFeedback(String feedbackText) {
         SQLiteDatabase DB = this.getWritableDatabase();
@@ -82,7 +82,6 @@ public class DBHelper extends SQLiteOpenHelper {
             DB.close();
         }
     }
-
 
 
 //    public boolean insertCourse(int studentId, String courseName) {
@@ -148,30 +147,22 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public List<Order> getAllOrders() {
         List<Order> orderList = new ArrayList<>();
-        // Select All Query
-        String selectQuery = "SELECT * FROM " + TABLE_ORDERS;
-
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.rawQuery(selectQuery, null);
+        Cursor cursor = db.rawQuery("SELECT orderId, username, orderDetails, totalAmount FROM " + TABLE_ORDERS, null);
 
-        // Looping through all rows and adding to list
-        if (cursor.moveToFirst()) {
+        if (cursor != null && cursor.moveToFirst()) {
             do {
-                Order order = new Order(
-                        cursor.getInt(cursor.getColumnIndex("orderId")),
-                        cursor.getInt(cursor.getColumnIndex("username")),
-                        cursor.getString(cursor.getColumnIndex("orderDetails")),
-                        cursor.getString(cursor.getColumnIndex("totalAmount"))
-                );
+                int orderId = cursor.getInt(cursor.getColumnIndexOrThrow("orderId"));
+                int username = cursor.getInt(cursor.getColumnIndexOrThrow("username"));
+                String orderDetails = cursor.getString(cursor.getColumnIndexOrThrow("orderDetails"));
+                String totalAmount = cursor.getString(cursor.getColumnIndexOrThrow("totalAmount"));
+
+                Order order = new Order(orderId, username, orderDetails, totalAmount);
                 orderList.add(order);
             } while (cursor.moveToNext());
+            cursor.close();
         }
-
-        // Close cursor and database to free up resources
-        cursor.close();
         db.close();
-
-        // Return the list of orders
         return orderList;
     }
 
